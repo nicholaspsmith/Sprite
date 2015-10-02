@@ -53,6 +53,7 @@ resources.onReady(init);
 // Game state
 var player = {
   pos: [0, 0],
+  powerup: 'none',
   sprite: new Sprite('img/sprites.png', [0, 0], [39, 39], 16, [0, 1])
 };
 
@@ -82,14 +83,24 @@ function update(dt) {
   updateEntities(dt);
 
   // It gets harder over time by adding enemies using this
-  // equation: 1-.993^gameTime
-  if(Math.random() < 1 - Math.pow(.993, gameTime)) {
+  // equation: 1-.999^gameTime
+  if(Math.random() < 1 - Math.pow(.9993, gameTime)) {
     enemies.push({
       pos: [canvas.width, Math.random() * (canvas.height - 39)], sprite: new Sprite('img/sprites.png', [0, 78], [80, 39], 6, [0, 1, 2, 3, 2, 1])
     });
   }
   checkCollisions();
+  checkPowerup();
   scoreEl.innerHTML = score;
+}
+
+function checkPowerup() {
+  if (score > 1000) {
+    player.powerup = 'double';
+  }
+  if (score > 5000) {
+    player.powerup = 'sides';
+  }
 }
 
 // User input
@@ -114,21 +125,51 @@ function handleInput(dt) {
     var x = player.pos[0] + player.sprite.size[0] / 2;
     var y = player.pos[1] + player.sprite.size[1] / 2;
 
-    bullets.push({
-      pos: [x, y],
-      dir: 'forward',
-      sprite: new Sprite('img/sprites.png', [0, 39], [18,8])
-    });
-    bullets.push({
-      pos: [x, y],
-      dir: 'up',
-      sprite: new Sprite('img/sprites.png', [0, 50], [9, 5])
-    });
-    bullets.push({
-      pos: [x, y],
-      dir: 'down',
-      sprite: new Sprite('img/sprites.png', [0, 60], [9, 5])
-    });
+    switch (player.powerup) {
+      case 'none':
+        bullets.push({
+          pos: [x, y],
+          dir: 'forward',
+          sprite: new Sprite('img/sprites.png', [0, 39], [18,8])
+        });
+        break;
+      case 'double':
+        bullets.push({
+          pos: [x, y],
+          dir: 'forward',
+          sprite: new Sprite('img/sprites.png', [0, 39], [18,8])
+        });
+        bullets.push({
+          pos: [x, y-15],
+          dir: 'forward',
+          sprite: new Sprite('img/sprites.png', [0, 39], [18,8])
+        });
+        break;
+      case 'sides':
+        bullets.push({
+          pos: [x, y],
+          dir: 'forward',
+          sprite: new Sprite('img/sprites.png', [0, 39], [18,8])
+        });
+        bullets.push({
+          pos: [x, y],
+          dir: 'up',
+          sprite: new Sprite('img/sprites.png', [0, 50], [9, 5])
+        });
+        bullets.push({
+          pos: [x, y],
+          dir: 'down',
+          sprite: new Sprite('img/sprites.png', [0, 60], [9, 5])
+        });
+        break;
+      default:
+        bullets.push({
+          pos: [x, y],
+          dir: 'forward',
+          sprite: new Sprite('img/sprites.png', [0, 39], [18,8])
+        });
+        break;
+    }
 
     lastFire = Date.now();
   }
@@ -143,11 +184,13 @@ function updateEntities(dt) {
     var bullet = bullets[i];
     switch(bullet.dir) {
       case 'up':
-      bullet.pos[1] -= bulletSpeed * dt; break;
+        bullet.pos[0] += bulletSpeed * dt;
+        bullet.pos[1] -= bulletSpeed * dt; break;
       case 'down':
-      bullet.pos[1] += bulletSpeed * dt; break;
+        bullet.pos[0] += bulletSpeed * dt;
+        bullet.pos[1] += bulletSpeed * dt; break;
       default:
-      bullet.pos[0] += bulletSpeed * dt;
+        bullet.pos[0] += bulletSpeed * dt;
     }
 
     // remove bullet when it goes off screen
