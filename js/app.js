@@ -23,7 +23,7 @@ document.body.appendChild(canvas);
 var lastTime;
 function main() {
   var now = Date.now();
-  var dt = (nos - lastTime) / 1000.0;
+  var dt = (now - lastTime) / 1000.0;
 
   update(dt);
   render();
@@ -186,8 +186,9 @@ function collides(x,y,r,b,x2,y2,r2,b2) {
 }
 
 function boxCollides(pos, size, pos2, size2) {
-  return collides(pos[0], pos[1], pos[0] + size[0], pos[1] + size[1], pos2[0], pos2[1], pos[0] + size2[0], pos2[1] + size2[1]);
+  return collides(pos[0], pos[1], pos[0] + size[0], pos[1] + size[1], pos2[0], pos2[1], pos2[0] + size2[0], pos2[1] + size2[1]);
 }
+
 
 function checkCollisions() {
   checkPlayerBounds();
@@ -241,4 +242,50 @@ function checkPlayerBounds() {
   else if(player.pos[1] > canvas.height - player.sprite.size[1]) {
     player.pos[1] = canvas.height - player.sprite.size[1];
   }
+}
+
+function render() {
+  ctx.fillStyle = terrainPattern;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  if(!isGameOver) {
+    renderEntity(player);
+  }
+
+  renderEntities(bullets);
+  renderEntities(enemies);
+  renderEntities(explosions);
+}
+
+function renderEntities(list) {
+  for(var i=0;i<list.length;i++){
+    renderEntity(list[i]);
+  }
+}
+
+function renderEntity(entity) {
+  ctx.save();
+  ctx.translate(entity.pos[0], entity.pos[1]);
+  entity.sprite.render(ctx);
+  ctx.restore();
+}
+
+function gameOver() {
+  document.getElementById('game-over').style.display = 'block';
+  document.getElementById('game-over-overlay').style.display = 'block';
+  isGameOver = true;
+}
+
+function reset() {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('game-over-overlay').style.display = 'none';
+  isGameOver = false;
+
+  gameTime = 0;
+  score = 0;
+
+  enemies = [];
+  bullets = [];
+
+  player.pos = [50, canvas.height / 2];
 }
